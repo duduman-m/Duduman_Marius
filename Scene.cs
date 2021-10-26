@@ -1,12 +1,9 @@
-﻿using OpenTK;
+﻿using Duduman_Marius;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System;
 using System.Drawing;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
 
 namespace Duduman_Marius_Laborator
@@ -14,17 +11,24 @@ namespace Duduman_Marius_Laborator
     class Scene : GameWindow
     {
         bool showCube = true;
-        int lookat_X = 0;
-        int lookat_Y = 0;
-        int lookat_Z = 15;
-        float cube_X = 0;
-        float cube_Y = 0;
+        float camera_pos_X = 0;
+        float camera_pos_Y = 2;
+        float camera_pos_Z = 35;
+        float camera_angle_X = 0;
+        float camera_angle_Y = 0;
+        float camera_angle_Z = 0;
+        float camera_movement_speed = (float)0.5;
         KeyboardState lastKeyPress;
+
+        Triangle tr;
+        Cube cb;
 
         // Constructor.
         public Scene() : base(800, 600)
         {
             VSync = VSyncMode.On;
+            tr = new Triangle("Triangle.txt");
+            cb = new Cube("Cube.txt");
         }
 
         protected override void OnLoad(EventArgs e)
@@ -33,8 +37,8 @@ namespace Duduman_Marius_Laborator
 
             GL.ClearColor(Color.Gray);
             GL.Enable(EnableCap.DepthTest);
-            this.CursorGrabbed = true;
-            this.CursorVisible = false;
+            CursorGrabbed = true;
+            CursorVisible = false;
         }
 
         protected override void OnResize(EventArgs e)
@@ -56,7 +60,10 @@ namespace Duduman_Marius_Laborator
 
             KeyboardState keyboard = Keyboard.GetState();
 
-            if (keyboard[Key.Escape])
+
+            if (keyboard.Equals(lastKeyPress))
+                ; // Go over if it's the same key pressed
+            else if (keyboard[Key.Escape])
             {
                 Exit();
                 return;
@@ -82,37 +89,60 @@ namespace Duduman_Marius_Laborator
             else if (keyboard[Key.R])
             {
                 // Reset button
-                lookat_X = lookat_Y = 0;
+                camera_pos_X = 0;
+                camera_pos_Y = 2;
+                camera_pos_Z = 35;
+            }
+            else if (keyboard[Key.Number1])
+            {
+                tr.SetColors(new Color[] { Color.Blue, Color.Yellow, Color.Red });
+            }
+            else if (keyboard[Key.Number2])
+            {
+                tr.SetColors(new Color[] { Color.Black, Color.Red, Color.Yellow });
+            }
+            else if (keyboard[Key.Number3])
+            {
+                tr.SetColors(new Color[] { Color.Red, Color.White, Color.Blue });
             }
 
-            // Camera movement
-            if (keyboard[Key.Up])
+            // Cube Movement
+            cb.CheckJump();
+            if (keyboard[Key.Space])
             {
-                lookat_Y += 1;
-            }
-            else if (keyboard[Key.Down])
-            {
-                lookat_Y -= 1;
+                cb.Jump();
             }
 
-            if (keyboard[Key.Left])
+            if (keyboard[Key.W])
             {
-                lookat_X += 1;
+                cb.MoveUp();
             }
-            else if (keyboard[Key.Right])
+            else if (keyboard[Key.S])
             {
-                lookat_X -= 1;
+                cb.MoveDown();
             }
+
+            if (keyboard[Key.A])
+            {
+                cb.MoveLeft();
+            }
+            else if (keyboard[Key.D])
+            {
+                cb.MoveRight();
+            }
+
+            // Camera Movement
+            MouseState mouse = Mouse.GetState();
+            camera_pos_X = cb.GetX();
+            camera_pos_Y = cb.GetY() * camera_movement_speed + 3;
+            camera_pos_Z = cb.GetZ() + 10;
+
+            camera_angle_X = camera_pos_X + (mouse.X - Width / 2f) / (Width / 16f);
+            camera_angle_Y = camera_pos_Y - (mouse.Y - Height / 2f) / (Height / 16f);
+            camera_angle_Z = camera_pos_Z - 35; // For now
+
 
             lastKeyPress = keyboard;
-        }
-
-        protected override void OnMouseMove(MouseMoveEventArgs e)
-        {
-            base.OnMouseMove(e);
-            // Mouse movement
-            cube_X = (e.X - Width / 2f) / (Width / 2f);
-            cube_Y = -(e.Y - Height / 2f) / (Height / 2f);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -121,16 +151,16 @@ namespace Duduman_Marius_Laborator
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            Matrix4 lookat = Matrix4.LookAt(lookat_X, lookat_Y, lookat_Z, 0, 0, 0, 0, 1, 0);
+            Matrix4 lookat = Matrix4.LookAt(camera_pos_X, camera_pos_Y, camera_pos_Z, camera_angle_X, camera_angle_Y, camera_angle_Z, 0, 1, 0);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref lookat);
 
             DrawAxes();
-            //DrawTriangle();
+            tr.Draw();
 
             if (showCube == true)
             {
-                DrawCube();
+                cb.Draw();
             }
 
             SwapBuffers();
@@ -160,67 +190,11 @@ namespace Duduman_Marius_Laborator
             GL.End();
         }
 
-        private void DrawTriangle()
-        {
-            GL.Begin(PrimitiveType.Triangles);
-
-            GL.Color3(Color.Aqua);
-            GL.Vertex3(0, 15, 5);
-            GL.Vertex3(0, 20, 0);
-            GL.Vertex3(5, 15, 0);
-
-            GL.End();
-        }
-
-        private void DrawCube()
-        {
-            GL.Begin(PrimitiveType.Quads);
-
-            GL.Color3(Color.Silver);
-            GL.Vertex3(cube_X - 1.0f, cube_Y - 1.0f, - 1.0f);
-            GL.Vertex3(cube_X - 1.0f, cube_Y + 1.0f, - 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y + 1.0f, - 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y - 1.0f, - 1.0f);
-
-            GL.Color3(Color.Honeydew);
-            GL.Vertex3(cube_X - 1.0f, cube_Y - 1.0f, - 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y - 1.0f, - 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y - 1.0f, 1.0f);
-            GL.Vertex3(cube_X - 1.0f, cube_Y - 1.0f, 1.0f);
-
-            GL.Color3(Color.Moccasin);
-
-            GL.Vertex3(cube_X - 1.0f, cube_Y - 1.0f, - 1.0f);
-            GL.Vertex3(cube_X - 1.0f, cube_Y - 1.0f, 1.0f);
-            GL.Vertex3(cube_X - 1.0f, cube_Y + 1.0f, 1.0f);
-            GL.Vertex3(cube_X - 1.0f, cube_Y + 1.0f, - 1.0f);
-
-            GL.Color3(Color.IndianRed);
-            GL.Vertex3(cube_X - 1.0f, cube_Y - 1.0f, 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y - 1.0f, 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y + 1.0f, 1.0f);
-            GL.Vertex3(cube_X - 1.0f, cube_Y + 1.0f, 1.0f);
-
-            GL.Color3(Color.PaleVioletRed);
-            GL.Vertex3(cube_X - 1.0f, cube_Y + 1.0f, - 1.0f);
-            GL.Vertex3(cube_X - 1.0f, cube_Y + 1.0f, 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y + 1.0f, 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y + 1.0f, - 1.0f);
-
-            GL.Color3(Color.ForestGreen);
-            GL.Vertex3(cube_X + 1.0f, cube_Y - 1.0f, - 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y + 1.0f, - 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y + 1.0f, 1.0f);
-            GL.Vertex3(cube_X + 1.0f, cube_Y - 1.0f, 1.0f);
-
-            GL.End();
-        }
-
         static void Main(string[] args)
         {
             using (Scene example = new Scene())
             {
-                example.Run(30.0, 0.0);
+                example.Run(60.0, 0.0);
             }
         }
     }
