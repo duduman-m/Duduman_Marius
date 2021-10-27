@@ -95,15 +95,22 @@ namespace Duduman_Marius_Laborator
             }
             else if (keyboard[Key.Number1])
             {
-                tr.SetColors(new Color[] { Color.Blue, Color.Yellow, Color.Red });
+                tr.SetColors(new Color[] {Color.Blue, Color.Yellow, Color.Red });
+                tr.SetRandom(false);
             }
             else if (keyboard[Key.Number2])
             {
                 tr.SetColors(new Color[] { Color.Black, Color.Red, Color.Yellow });
+                tr.SetRandom(false);
             }
             else if (keyboard[Key.Number3])
             {
                 tr.SetColors(new Color[] { Color.Red, Color.White, Color.Blue });
+                tr.SetRandom(false);
+            }
+            else if (keyboard[Key.Number4])
+            {
+                tr.SetRandom(true);
             }
 
             // Cube Movement
@@ -156,7 +163,10 @@ namespace Duduman_Marius_Laborator
             GL.LoadMatrix(ref lookat);
 
             DrawAxes();
-            tr.Draw();
+            if (tr.GetRandom())
+                tr.RandomDraw();
+            else
+                tr.Draw();
 
             if (showCube == true)
             {
