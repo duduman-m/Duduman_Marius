@@ -13,7 +13,7 @@ namespace Duduman_Marius_Laborator
         KeyboardState lastKeyPress;
 
         Triangle tr;
-        Cube cb;
+        Cube cb, cb2;
         Axes ax;
         Grid grid;
         Camera3DIsometric cam;
@@ -24,6 +24,7 @@ namespace Duduman_Marius_Laborator
             VSync = VSyncMode.On;
             tr = new Triangle("Triangle.txt");
             cb = new Cube("Cube.txt");
+            cb2 = new Cube("Cube2.txt");
             ax = new Axes();
             grid = new Grid();
             cam = new Camera3DIsometric();
@@ -113,6 +114,10 @@ namespace Duduman_Marius_Laborator
                     cb.ResetColors();
                 }
             }
+            else if (keyboard[Key.C])
+            {
+                cam.SetFirstPerson();
+            }
 
             // Cube Movement
             cb.CheckJump();
@@ -143,6 +148,11 @@ namespace Duduman_Marius_Laborator
             MouseState mouse = Mouse.GetState();
             cam.FollowCube(cb.GetCoords(), new Vector3((mouse.X - Width / 2f) / (Width / 16f), (mouse.Y - Height / 2f) / (Height / 16f), 35));
 
+            if(mouse[MouseButton.Left])
+            {
+                cb2.StartFalling();
+            }
+
             lastKeyPress = keyboard;
         }
 
@@ -164,6 +174,8 @@ namespace Duduman_Marius_Laborator
             cb.Draw();
             ax.Draw();
             grid.Draw();
+
+            cb2.FallExample();
 
             SwapBuffers();
             Thread.Sleep(1);

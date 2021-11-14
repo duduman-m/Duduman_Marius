@@ -8,6 +8,7 @@ namespace Duduman_Marius
         private Vector3 eye;
         private Vector3 target;
         private Vector3 up_vector;
+        private bool first_person = false;
 
         private const float MOVEMENT_UNIT = (float)0.5;
 
@@ -39,9 +40,21 @@ namespace Duduman_Marius
             GL.LoadMatrix(ref camera);
         }
 
+        public void SetFirstPerson()
+        {
+            first_person = !first_person;
+            if (first_person)
+                System.Console.WriteLine("First Person Camera!");
+            else
+                System.Console.WriteLine("Third Person Camera!");
+        }
+
         public void FollowCube(Vector3 cube, Vector3 mouse)
         {
-            eye = new Vector3(cube.X, cube.Y * MOVEMENT_UNIT + 3, cube.Z + 10);
+            int z = 10;
+            if (first_person)
+                z = -1;
+            eye = new Vector3(cube.X, cube.Y * MOVEMENT_UNIT + 3, cube.Z + z);
             target = new Vector3(eye.X + mouse.X, eye.Y - mouse.Y, eye.Z - mouse.Z);
             SetCamera();
         }

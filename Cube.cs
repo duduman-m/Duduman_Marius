@@ -226,5 +226,19 @@ namespace Duduman_Marius
                     break;
             }
         }
+
+        public void StartFalling()
+        {
+            y = 10;
+        }
+
+        public void FallExample()
+        {
+            Draw();
+            if (y - size != 0)
+            {
+                y -= (float)0.25;
+            }
+        }
     }
 }
